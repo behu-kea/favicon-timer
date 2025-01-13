@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
 <div class="max-w-md w-full text-center space-y-6">
-    <h1 class="text-3xl font-bold">Countdown Timer</h1>
+    <h1 class="text-3xl font-bold">Tab countdown Timer</h1>
 
     <!-- Input & Buttons -->
     <div class="flex flex-col items-center sm:flex-row sm:justify-center sm:space-x-4 space-y-3 sm:space-y-0">
@@ -56,11 +56,12 @@
 
 <script>
     let countdownInterval;
+    let blinkInterval;
     let totalSeconds;
     let remainingSeconds;
 
     function startTimer() {
-        // If there’s no time set yet (i.e., new start) or if user previously reset
+        // If there's no "remainingSeconds" set or we've reset, read from input again
         if (!remainingSeconds) {
             const minutes = parseInt(document.getElementById("inputMinutes").value, 10) || 1;
             totalSeconds = minutes * 60;
@@ -70,18 +71,18 @@
         // Immediately update display
         updateDisplay(remainingSeconds);
 
-        // If an interval is active, clear it before starting a new one
+        // Clear any existing intervals
         clearInterval(countdownInterval);
+        clearInterval(blinkInterval); // Stop any existing "Time's up!" blink
+        blinkInterval = null;
 
-        // Start interval
         countdownInterval = setInterval(() => {
             remainingSeconds--;
 
             if (remainingSeconds < 0) {
                 clearInterval(countdownInterval);
-                document.getElementById("countdownDisplay").textContent = "Time's up!";
-                document.title = "Time's up!";
-                updateProgressBar(0); // Set progress to zero at end
+                // Start blinking "Time's up!"
+                blinkTimesUp();
                 remainingSeconds = 0;
             } else {
                 updateDisplay(remainingSeconds);
@@ -95,6 +96,8 @@
 
     function resetTimer() {
         clearInterval(countdownInterval);
+        clearInterval(blinkInterval);
+        blinkInterval = null;
         remainingSeconds = 0;
         updateDisplay(0);
         updateProgressBar(0);
@@ -107,17 +110,32 @@
 
         // Update page content
         document.getElementById("countdownDisplay").textContent = timeStr;
-        // Update browser title
+        // Update browser tab
         document.title = timeStr + " - Countdown Timer";
 
-        // Update progress bar (percentage of time left)
-        const progress = seconds > 0 ? (seconds / totalSeconds) * 100 : 0;
-        updateProgressBar(progress);
+        // Update progress bar
+        const progressPercent = totalSeconds
+            ? (seconds / totalSeconds) * 100
+            : 0;
+        updateProgressBar(progressPercent);
     }
 
     function updateProgressBar(percentage) {
-        const progressBar = document.getElementById("progressBar");
-        progressBar.style.width = percentage + "%";
+        document.getElementById("progressBar").style.width = percentage + "%";
+    }
+
+    function blinkTimesUp() {
+        let show = true;
+        blinkInterval = setInterval(() => {
+            if (show) {
+                document.getElementById("countdownDisplay").textContent = "Time's up!";
+                document.title = "Time's up!";
+            } else {
+                //document.getElementById("countdownDisplay").textContent = "";
+                document.title = "";
+            }
+            show = !show;
+        }, 1000); // Blink every 500ms
     }
 </script>
 </body>
