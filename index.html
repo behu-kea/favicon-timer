@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Countdown Timer</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
+<div class="max-w-md w-full text-center space-y-6">
+    <h1 class="text-3xl font-bold">Countdown Timer</h1>
+
+    <!-- Input & Buttons -->
+    <div class="flex flex-col items-center sm:flex-row sm:justify-center sm:space-x-4 space-y-3 sm:space-y-0">
+        <div class="flex items-center space-x-2">
+            <label for="inputMinutes" class="font-medium">Minutes:</label>
+            <input
+                    type="number"
+                    id="inputMinutes"
+                    value="1"
+                    min="1"
+                    class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+        </div>
+
+        <button
+                onclick="startTimer()"
+                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+            Start
+        </button>
+
+        <button
+                onclick="pauseTimer()"
+                class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        >
+            Pause
+        </button>
+
+        <button
+                onclick="resetTimer()"
+                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+            Reset
+        </button>
+    </div>
+
+    <!-- Time Display -->
+    <h2 id="countdownDisplay" class="text-4xl font-bold text-gray-700">00:00</h2>
+
+    <!-- Progress Bar -->
+    <div class="w-full bg-gray-200 rounded h-4">
+        <div id="progressBar" class="bg-blue-600 h-4 rounded" style="width:0%"></div>
+    </div>
+</div>
+
+<script>
+    let countdownInterval;
+    let totalSeconds;
+    let remainingSeconds;
+
+    function startTimer() {
+        // If there’s no time set yet (i.e., new start) or if user previously reset
+        if (!remainingSeconds) {
+            const minutes = parseInt(document.getElementById("inputMinutes").value, 10) || 1;
+            totalSeconds = minutes * 60;
+            remainingSeconds = totalSeconds;
+        }
+
+        // Immediately update display
+        updateDisplay(remainingSeconds);
+
+        // If an interval is active, clear it before starting a new one
+        clearInterval(countdownInterval);
+
+        // Start interval
+        countdownInterval = setInterval(() => {
+            remainingSeconds--;
+
+            if (remainingSeconds < 0) {
+                clearInterval(countdownInterval);
+                document.getElementById("countdownDisplay").textContent = "Time's up!";
+                document.title = "Time's up!";
+                updateProgressBar(0); // Set progress to zero at end
+                remainingSeconds = 0;
+            } else {
+                updateDisplay(remainingSeconds);
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(countdownInterval);
+    }
+
+    function resetTimer() {
+        clearInterval(countdownInterval);
+        remainingSeconds = 0;
+        updateDisplay(0);
+        updateProgressBar(0);
+    }
+
+    function updateDisplay(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        const timeStr = String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+
+        // Update page content
+        document.getElementById("countdownDisplay").textContent = timeStr;
+        // Update browser title
+        document.title = timeStr + " - Countdown Timer";
+
+        // Update progress bar (percentage of time left)
+        const progress = seconds > 0 ? (seconds / totalSeconds) * 100 : 0;
+        updateProgressBar(progress);
+    }
+
+    function updateProgressBar(percentage) {
+        const progressBar = document.getElementById("progressBar");
+        progressBar.style.width = percentage + "%";
+    }
+</script>
+</body>
+</html>
