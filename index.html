@@ -11,7 +11,7 @@
 
 <!-- Main container -->
 <div class="max-w-md w-full text-center space-y-6">
-    <h1 class="text-3xl font-bold">Tab Countdown Timer</h1>
+    <h1 class="text-4xl font-bold mb-12">Tab Countdown Timer</h1>
 
     <!-- Input & Buttons -->
     <div class="flex flex-col items-center sm:flex-row sm:justify-center sm:space-x-4 space-y-3 sm:space-y-0">
@@ -58,7 +58,7 @@
     -->
     <h2
             id="countdownDisplay"
-            class="text-4xl font-bold text-gray-700 transition-opacity duration-500 opacity-100"
+            class="text-3xl font-bold text-gray-700 transition-opacity duration-500 opacity-100"
     >
         00:00
     </h2>
@@ -202,7 +202,7 @@
                 countdownDisplay.classList.add("opacity-0");
             }
             show = !show;
-        }, 700); // Adjust speed for faster/slower fading
+        }, 1000); // Adjust speed for faster/slower fading
     }
 </script>
 </body>
