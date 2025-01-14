@@ -7,7 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="favicon.png" type="image/x-icon">
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4 relative">
+
+<!-- Main container -->
 <div class="max-w-md w-full text-center space-y-6">
     <h1 class="text-3xl font-bold">Tab Countdown Timer</h1>
 
@@ -25,14 +27,16 @@
         </div>
 
         <button
-                onclick="startTimer()"
+                id="startButton"
+                onclick="startTimer(false)"
                 class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
             Start
         </button>
 
         <button
-                onclick="pauseTimer()"
+                id="pauseResumeButton"
+                onclick="togglePause()"
                 class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
         >
             Pause
@@ -47,7 +51,17 @@
     </div>
 
     <!-- Time Display -->
-    <h2 id="countdownDisplay" class="text-4xl font-bold text-gray-700">00:00</h2>
+    <!--
+      Use Tailwind classes:
+      - transition-opacity => smooth transitions on opacity changes
+      - We'll toggle to "opacity-0" for fade effect, "opacity-100" for visible
+    -->
+    <h2
+            id="countdownDisplay"
+            class="text-4xl font-bold text-gray-700 transition-opacity duration-500 opacity-100"
+    >
+        00:00
+    </h2>
 
     <!-- Progress Bar -->
     <div class="w-full bg-gray-200 rounded h-4">
@@ -55,15 +69,40 @@
     </div>
 </div>
 
+<!-- Bottom-right corner text -->
+<div class="fixed bottom-2 right-2 text-sm text-gray-500">
+    Lavet af
+    <a target="_blank" href="https://benna100.github.io/portfolio/" class="text-blue-500">Benjamin Hughes</a>
+    med hjælp fra
+    <a target="_blank" href="https://chatgpt.com/share/67863b75-1f68-8008-b847-c55a34b61caf" class="text-blue-500">Chatten</a>
+</div>
+
 <script>
     let countdownInterval;
     let blinkInterval;
     let totalSeconds;
     let remainingSeconds;
+    let isPaused = false; // Tracks if the timer is paused
 
-    function startTimer() {
-        // If there's no "remainingSeconds" set or we've reset, read from input again
-        if (!remainingSeconds) {
+    const countdownDisplay = document.getElementById("countdownDisplay");
+    const progressBar = document.getElementById("progressBar");
+    const pauseResumeButton = document.getElementById("pauseResumeButton");
+
+    /**
+     * Start or resume the timer.
+     * @param {boolean} resume - If true, we just resume from remainingSeconds; if false, we read from inputMinutes
+     */
+    function startTimer(resume) {
+        // Clear any existing intervals (stop blinking, etc.)
+        clearInterval(countdownInterval);
+        clearInterval(blinkInterval);
+
+        // Make sure "Time's up!" is not in fade mode
+        countdownDisplay.classList.remove("opacity-0");
+        countdownDisplay.classList.add("opacity-100");
+
+        // If we aren't just resuming, read time from the input
+        if (!resume) {
             const minutes = parseInt(document.getElementById("inputMinutes").value, 10) || 1;
             totalSeconds = minutes * 60;
             remainingSeconds = totalSeconds;
@@ -72,18 +111,16 @@
         // Immediately update display
         updateDisplay(remainingSeconds);
 
-        // Clear any existing intervals
-        clearInterval(countdownInterval);
-        clearInterval(blinkInterval); // Stop any existing "Time's up!" blink
-        blinkInterval = null;
+        // We're no longer paused
+        isPaused = false;
+        pauseResumeButton.textContent = "Pause";
 
+        // Start the countdown
         countdownInterval = setInterval(() => {
             remainingSeconds--;
-
             if (remainingSeconds < 0) {
                 clearInterval(countdownInterval);
-                // Start blinking "Time's up!"
-                blinkTimesUp();
+                fadeTimesUp();
                 remainingSeconds = 0;
             } else {
                 updateDisplay(remainingSeconds);
@@ -91,17 +128,42 @@
         }, 1000);
     }
 
+    /** Toggle pause/resume state */
+    function togglePause() {
+        if (!isPaused) {
+            // Pause the timer
+            pauseTimer();
+        } else {
+            // Resume the timer
+            resumeTimer();
+        }
+    }
+
     function pauseTimer() {
         clearInterval(countdownInterval);
+        isPaused = true;
+        pauseResumeButton.textContent = "Resume";
+    }
+
+    function resumeTimer() {
+        startTimer(true); // Passing true so we don’t reset the time
     }
 
     function resetTimer() {
         clearInterval(countdownInterval);
         clearInterval(blinkInterval);
         blinkInterval = null;
+        isPaused = false;
+
         remainingSeconds = 0;
         updateDisplay(0);
         updateProgressBar(0);
+
+        countdownDisplay.classList.remove("opacity-0");
+        countdownDisplay.classList.add("opacity-100");
+
+        // Reset pause/resume button text
+        pauseResumeButton.textContent = "Pause";
     }
 
     function updateDisplay(seconds) {
@@ -109,9 +171,9 @@
         const s = seconds % 60;
         const timeStr = String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
 
-        // Update page content
-        document.getElementById("countdownDisplay").textContent = timeStr;
-        // Update browser tab
+        // Update the page content
+        countdownDisplay.textContent = timeStr;
+        // Update the tab title
         document.title = timeStr + " - Tab Countdown Timer";
 
         // Update progress bar
@@ -122,21 +184,25 @@
     }
 
     function updateProgressBar(percentage) {
-        document.getElementById("progressBar").style.width = percentage + "%";
+        progressBar.style.width = percentage + "%";
     }
 
-    function blinkTimesUp() {
+    // Fades "Time's up!" in and out by toggling opacity
+    function fadeTimesUp() {
         let show = true;
         blinkInterval = setInterval(() => {
             if (show) {
-                document.getElementById("countdownDisplay").textContent = "Time's up!";
+                countdownDisplay.textContent = "Time's up!";
                 document.title = "Time's up!";
+                countdownDisplay.classList.remove("opacity-0");
+                countdownDisplay.classList.add("opacity-100");
             } else {
-                //document.getElementById("countdownDisplay").textContent = "";
                 document.title = "Tab Countdown Timer";
+                countdownDisplay.classList.remove("opacity-100");
+                countdownDisplay.classList.add("opacity-0");
             }
             show = !show;
-        }, 1000); // Blink every 500ms
+        }, 700); // Adjust speed for faster/slower fading
     }
 </script>
 </body>
